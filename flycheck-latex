@@ -1,0 +1,55 @@
+#!/bin/sh
+
+function usage() {
+  echo <<EOF >&2
+Usage: $0 latex-command [options...] source-inplace
+    Options are passed directly to latex-command.
+    Source-original is guessed in this version.
+EOF
+  exit 1
+}
+
+function get_source() {
+  for i in $*; do
+    if expr "$i" : '^[^-]' >/dev/null; then
+      echo "$i" | sed 's/\.tex$//';
+      return 0
+    fi
+  done
+}
+function get_source_orig() {
+  source=`get_source $*`
+  if expr "$source" : '\/' >/dev/null; then
+    sedexp='s/\/flycheck_\([^/]*\)$/\/\1/'
+    regexp='\/flycheck_[^/]*$'
+  else
+    sedexp='s/flycheck_\([^/]*\)$/\1/'
+    regexp='flycheck_[^/]*$'
+  fi
+  echo $source | sed $sedexp
+  echo $source | grep $regexp > /dev/null
+  return $?
+}
+
+LATEX=$1
+shift
+flycheck_source=`get_source $*`
+original_source=`get_source_orig $*`
+
+if [ $? -eq 0 ]; then
+  for ext in aux; do
+    if [ -f "$original_source.$ext" -a ! -f "$flycheck_source.$ext" ]; then
+      cp "$original_source.$ext" "$flycheck_source.$ext"
+    fi
+  done
+  for ext in bbl; do
+    if [ -f "$original_source.$ext" -a ! -f "$flycheck_source.$ext" ]; then
+      cp "$original_source.$ext" "$flycheck_source.$ext"
+    elif [ -f "$original_source.$ext" -a -f "$flycheck_source.$ext" -a "$original_source.$ext" -nt "$flycheck_source.$ext" ]; then
+      cp "$original_source.$ext" "$flycheck_source.$ext"
+    fi
+  done
+fi
+$LATEX $*
+exit $?
+
