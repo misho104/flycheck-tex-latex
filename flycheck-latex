@@ -60,6 +60,8 @@ elif [ "$LATEX" = "platex" ]; then
   platex -no-file-line-error -draftmode -interaction=nonstopmode $original_source
 elif [ "$LATEX" = "uplatex" ]; then
   uplatex -no-file-line-error -draftmode -interaction=nonstopmode $original_source
+elif [ "$LATEX" = "pdflatex" ]; then
+  pdflatex -no-file-line-error -draftmode -interaction=nonstopmode $original_source
 else
   latex -no-file-line-error -draftmode -interaction=nonstopmode $original_source
 fi
