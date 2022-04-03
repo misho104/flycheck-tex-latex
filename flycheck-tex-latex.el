@@ -20,16 +20,22 @@
 (provide 'flycheck-tex-latex)
 (require 'flycheck)
 
-(flycheck-define-checker tex-latex
+(defun flycheck-get-latex-command ()
+  (let ((cmd (YaTeX-get-builtin "!")))
+      (cond
+       ((null cmd) "pdflatex")
+       ((eq cmd "") "pdflatex")
+       (t cmd))))
+
+(flycheck-define-command-checker 'tex-latex
     "A TeX and LaTeX syntax and style checker using latex."
-      :command ("flycheck-latex" "latex" "-no-file-line-error" "-draftmode" "-interaction=nonstopmode"
-              source-inplace)
+      :command '("flycheck-latex" (eval (flycheck-get-latex-command)) source-inplace)
     :error-patterns
-    (
+    '(
      (error line-start "! " (message "Undefined control sequence.\nl." line (one-or-more not-newline)) line-end)
      (error line-start "! " (message (one-or-more not-newline) "\n" (minimal-match (zero-or-more (zero-or-more not-newline) "\n")))
                       "l." line (zero-or-more not-newline) line-end)
      (warning  line-start "LaTeX Warning:" (message) " on input line " line "." line-end)
      )
-    :modes (tex-mode latex-mode plain-tex-mode yatex-mode))
+    :modes '(tex-mode latex-mode plain-tex-mode yatex-mode))
 (add-to-list 'flycheck-checkers 'tex-latex)
